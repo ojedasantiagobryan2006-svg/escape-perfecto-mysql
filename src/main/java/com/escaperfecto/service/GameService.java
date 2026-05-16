@@ -18,6 +18,7 @@ import java.util.Set;
 public class GameService {
     private static final int QUESTION_LIMIT = 10;
     private static final int SAFE_ESCAPE_MINIMUM_QUESTION = 7;
+    private static final Set<Integer> RECENT_QUESTION_IDS = new HashSet<>();
     private final QuestionRepository questionRepository;
     private final PrizeRepository prizeRepository;
     private final GameRepository gameRepository;
@@ -31,6 +32,7 @@ public class GameService {
     private String questionPlayer;
     private String cagePlayer;
     private Set<Integer> takenPrizeIds = new HashSet<>();
+    private List<Prize> takenPrizes = new ArrayList<>();
 
     public GameService(QuestionRepository questionRepository, PrizeRepository prizeRepository, GameRepository gameRepository) {
         this.questionRepository = questionRepository;
@@ -54,6 +56,8 @@ public class GameService {
         this.totalPrize = 0;
         this.escaped = false;
         this.takenPrizeIds = new HashSet<>();
+        this.takenPrizes = new ArrayList<>();
+        rememberQuestions(this.questions);
     }
 
     public Question getCurrentQuestion() {
@@ -104,6 +108,7 @@ public class GameService {
             escaped = true;
         } else {
             totalPrize += prize.getValue();
+            takenPrizes.add(prize);
         }
         return true;
     }
@@ -115,9 +120,24 @@ public class GameService {
     }
 
     public GameResult finishGame(boolean escapedByDoor) {
+        return finishGame(escapedByDoor, false, escapedByDoor, "Partida finalizada");
+    }
+
+    public GameResult finishGame(boolean escapedByDoor, boolean failed, boolean safeEscapeUsed, String finishReason) {
         boolean finalEscape = escaped || escapedByDoor;
         int finalPrize = finalEscape ? totalPrize : 0;
-        GameResult result = new GameResult(questionPlayer, cagePlayer, finalPrize, finalEscape, LocalDateTime.now());
+        GameResult result = new GameResult(
+                questionPlayer,
+                cagePlayer,
+                finalPrize,
+                finalEscape,
+                LocalDateTime.now(),
+                getAnsweredQuestions(),
+                failed,
+                safeEscapeUsed,
+                finishReason,
+                takenPrizes
+        );
         gameRepository.save(result);
         return result;
     }
@@ -163,22 +183,68 @@ public class GameService {
         return totalPrize;
     }
 
+    public List<Prize> getTakenPrizes() {
+        return new ArrayList<>(takenPrizes);
+    }
+
     public List<GameResult> getLastResults() {
         return gameRepository.findLastResults();
     }
 
+    public List<Question> getAllQuestions() {
+        return questionRepository.findAll();
+    }
+
+    public void addQuestion(Question question) {
+        questionRepository.add(question);
+    }
+
+    public void updateQuestion(Question question) {
+        questionRepository.update(question);
+    }
+
+    public void deleteQuestion(int id) {
+        questionRepository.deleteById(id);
+    }
+
+    public List<Prize> getAllPrizes() {
+        return prizeRepository.findAll();
+    }
+
+    public void addPrize(Prize prize) {
+        prizeRepository.add(prize);
+    }
+
+    public void updatePrize(Prize prize) {
+        prizeRepository.update(prize);
+    }
+
+    public void deletePrize(int id) {
+        prizeRepository.deleteById(id);
+    }
+
     private List<Question> buildQuestionRound(String category) {
         List<Question> selected = new ArrayList<>();
+        List<Question> preferred = new ArrayList<>();
+        List<Question> recent = new ArrayList<>();
         if (category == null || category.equals("Todas")) {
-            selected.addAll(allQuestions);
-            Collections.shuffle(selected);
+            splitByRecentUse(allQuestions, preferred, recent);
+            Collections.shuffle(preferred);
+            Collections.shuffle(recent);
+            selected.addAll(preferred);
+            selected.addAll(recent);
         } else {
+            List<Question> categoryQuestions = new ArrayList<>();
             for (Question question : allQuestions) {
                 if (question.getCategory().equals(category)) {
-                    selected.add(question);
+                    categoryQuestions.add(question);
                 }
             }
-            Collections.shuffle(selected);
+            splitByRecentUse(categoryQuestions, preferred, recent);
+            Collections.shuffle(preferred);
+            Collections.shuffle(recent);
+            selected.addAll(preferred);
+            selected.addAll(recent);
             for (Question question : allQuestions) {
                 if (selected.size() >= QUESTION_LIMIT) {
                     break;
@@ -192,6 +258,25 @@ public class GameService {
             return new ArrayList<>(selected.subList(0, QUESTION_LIMIT));
         }
         return selected;
+    }
+
+    private void splitByRecentUse(List<Question> source, List<Question> preferred, List<Question> recent) {
+        for (Question question : source) {
+            if (RECENT_QUESTION_IDS.contains(question.getId())) {
+                recent.add(question);
+            } else {
+                preferred.add(question);
+            }
+        }
+    }
+
+    private void rememberQuestions(List<Question> selectedQuestions) {
+        if (RECENT_QUESTION_IDS.size() + selectedQuestions.size() >= allQuestions.size()) {
+            RECENT_QUESTION_IDS.clear();
+        }
+        for (Question question : selectedQuestions) {
+            RECENT_QUESTION_IDS.add(question.getId());
+        }
     }
 
     private boolean containsQuestion(List<Question> questions, int id) {

@@ -290,7 +290,7 @@
                 </Constraint>
               </Constraints>
               <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridLayout">
-                <Property name="rows" type="int" value="2"/>
+                <Property name="rows" type="int" value="3"/>
                 <Property name="columns" type="int" value="1"/>
                 <Property name="horizontalGap" type="int" value="8"/>
                 <Property name="verticalGap" type="int" value="8"/>
@@ -310,6 +310,14 @@
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="trappedButtonActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="adminButton">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Administrador"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="adminButtonActionPerformed"/>
                   </Events>
                 </Component>
               </SubComponents>

@@ -53,6 +53,15 @@ En esta instalacion tambien funciona con el Maven incluido en NetBeans:
 & 'C:\Program Files\NetBeans-22\netbeans\java\maven\bin\mvn.cmd' test
 ```
 
+## Mejoras incluidas
+
+- Historial con preguntas contestadas, fallo, uso de escape seguro, motivo de cierre y total final.
+- Guardado de premios tomados por partida en la tabla `partida_premios`.
+- Resumen final al terminar la partida con jugadores, resultado, premios y motivo.
+- Preguntas mezcladas priorizando las que no han salido recientemente durante la sesion.
+- Efectos simples de sonido con el beep del sistema.
+- Modo administrador para agregar, editar y borrar preguntas o premios desde la app.
+
 ## Como jugar
 
 1. Escribe los nombres del participante que responde y del participante que entra a la jaula.

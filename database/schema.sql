@@ -23,7 +23,21 @@ CREATE TABLE IF NOT EXISTS partidas (
     jugador_jaula VARCHAR(100) NOT NULL,
     premio_total INT NOT NULL,
     escapo BOOLEAN NOT NULL,
-    fecha VARCHAR(40) NOT NULL
+    fecha VARCHAR(40) NOT NULL,
+    preguntas_contestadas INT NOT NULL DEFAULT 0,
+    fallo BOOLEAN NOT NULL DEFAULT FALSE,
+    uso_escape_seguro BOOLEAN NOT NULL DEFAULT FALSE,
+    motivo_fin VARCHAR(160) NOT NULL DEFAULT 'Partida finalizada'
+);
+
+CREATE TABLE IF NOT EXISTS partida_premios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    partida_id INT NOT NULL,
+    premio_id INT NOT NULL,
+    nombre VARCHAR(120) NOT NULL,
+    valor INT NOT NULL,
+    segundos_para_tomar INT NOT NULL,
+    FOREIGN KEY (partida_id) REFERENCES partidas(id) ON DELETE CASCADE
 );
 
 INSERT INTO preguntas (categoria, texto, opcion_a, opcion_b, opcion_c, respuesta_correcta, segundos) VALUES

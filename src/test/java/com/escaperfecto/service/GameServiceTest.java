@@ -55,10 +55,13 @@ class GameServiceTest {
         service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
         service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
         service.takePrize(prize);
-        GameResult result = service.finishGame(false);
+        GameResult result = service.finishGame(false, false, false, "Prueba atrapado");
 
         assertFalse(result.isEscaped());
         assertEquals(0, result.getTotalPrize());
+        assertEquals(2, result.getAnsweredQuestions());
+        assertEquals("Prueba atrapado", result.getFinishReason());
+        assertEquals(1, result.getTakenPrizes().size());
         assertEquals(1, gameRepository.savedResults.size());
     }
 
@@ -76,6 +79,7 @@ class GameServiceTest {
         GameResult result = service.finishGame(true);
 
         assertTrue(result.isEscaped());
+        assertTrue(result.isSafeEscapeUsed());
         assertEquals(normalPrize.getValue(), result.getTotalPrize());
     }
 
@@ -110,23 +114,57 @@ class GameServiceTest {
     }
 
     private QuestionRepository questionRepository() {
-        return () -> List.of(
-                new Question(1, "Historia", "Pregunta 1", "A", "B", "C", "A", 10),
-                new Question(2, "Historia", "Pregunta 2", "A", "B", "C", "B", 10),
-                new Question(3, "Ciencia", "Pregunta 3", "A", "B", "C", "C", 10),
-                new Question(4, "Ciencia", "Pregunta 4", "A", "B", "C", "A", 10),
-                new Question(5, "Historia", "Pregunta 5", "A", "B", "C", "B", 10),
-                new Question(6, "Historia", "Pregunta 6", "A", "B", "C", "C", 10),
-                new Question(7, "Ciencia", "Pregunta 7", "A", "B", "C", "A", 10),
-                new Question(8, "Ciencia", "Pregunta 8", "A", "B", "C", "B", 10)
-        );
+        return new QuestionRepository() {
+            @Override
+            public List<Question> findAll() {
+                return List.of(
+                        new Question(1, "Historia", "Pregunta 1", "A", "B", "C", "A", 10),
+                        new Question(2, "Historia", "Pregunta 2", "A", "B", "C", "B", 10),
+                        new Question(3, "Ciencia", "Pregunta 3", "A", "B", "C", "C", 10),
+                        new Question(4, "Ciencia", "Pregunta 4", "A", "B", "C", "A", 10),
+                        new Question(5, "Historia", "Pregunta 5", "A", "B", "C", "B", 10),
+                        new Question(6, "Historia", "Pregunta 6", "A", "B", "C", "C", 10),
+                        new Question(7, "Ciencia", "Pregunta 7", "A", "B", "C", "A", 10),
+                        new Question(8, "Ciencia", "Pregunta 8", "A", "B", "C", "B", 10)
+                );
+            }
+
+            @Override
+            public void add(Question question) {
+            }
+
+            @Override
+            public void update(Question question) {
+            }
+
+            @Override
+            public void deleteById(int id) {
+            }
+        };
     }
 
     private PrizeRepository prizeRepository() {
-        return () -> List.of(
-                new Prize(1, "Tablet", 3500, 10, false),
-                new Prize(2, "Escape seguro", 0, 6, true)
-        );
+        return new PrizeRepository() {
+            @Override
+            public List<Prize> findAll() {
+                return List.of(
+                        new Prize(1, "Tablet", 3500, 10, false),
+                        new Prize(2, "Escape seguro", 0, 6, true)
+                );
+            }
+
+            @Override
+            public void add(Prize prize) {
+            }
+
+            @Override
+            public void update(Prize prize) {
+            }
+
+            @Override
+            public void deleteById(int id) {
+            }
+        };
     }
 
     private void answerCorrectQuestions(GameService service, int amount) {

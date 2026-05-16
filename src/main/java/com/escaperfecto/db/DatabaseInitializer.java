@@ -41,10 +41,27 @@ public class DatabaseInitializer {
                         jugador_jaula VARCHAR(100) NOT NULL,
                         premio_total INT NOT NULL,
                         escapo BOOLEAN NOT NULL,
-                        fecha VARCHAR(40) NOT NULL
+                        fecha VARCHAR(40) NOT NULL,
+                        preguntas_contestadas INT NOT NULL DEFAULT 0,
+                        fallo BOOLEAN NOT NULL DEFAULT FALSE,
+                        uso_escape_seguro BOOLEAN NOT NULL DEFAULT FALSE,
+                        motivo_fin VARCHAR(160) NOT NULL DEFAULT 'Partida finalizada'
                     )
                     """);
 
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS partida_premios (
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        partida_id INT NOT NULL,
+                        premio_id INT NOT NULL,
+                        nombre VARCHAR(120) NOT NULL,
+                        valor INT NOT NULL,
+                        segundos_para_tomar INT NOT NULL,
+                        FOREIGN KEY (partida_id) REFERENCES partidas(id) ON DELETE CASCADE
+                    )
+                    """);
+
+            migrateExistingDatabase(connection);
             seedQuestions(connection);
             seedPrizes(connection);
         } catch (SQLException exception) {
@@ -62,6 +79,9 @@ public class DatabaseInitializer {
     }
 
     private void seedQuestions(Connection connection) throws SQLException {
+        if (countRows(connection, "preguntas") > 0) {
+            return;
+        }
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM preguntas");
         }
@@ -123,6 +143,9 @@ public class DatabaseInitializer {
     }
 
     private void seedPrizes(Connection connection) throws SQLException {
+        if (countRows(connection, "premios") > 0) {
+            return;
+        }
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM premios");
         }
@@ -152,5 +175,43 @@ public class DatabaseInitializer {
         statement.setInt(3, seconds);
         statement.setInt(4, safeEscape ? 1 : 0);
         statement.executeUpdate();
+    }
+
+    private int countRows(Connection connection, String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             var resultSet = statement.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+            resultSet.next();
+            return resultSet.getInt(1);
+        }
+    }
+
+    private void migrateExistingDatabase(Connection connection) throws SQLException {
+        addColumnIfMissing(connection, "partidas", "preguntas_contestadas", "INT NOT NULL DEFAULT 0");
+        addColumnIfMissing(connection, "partidas", "fallo", "BOOLEAN NOT NULL DEFAULT FALSE");
+        addColumnIfMissing(connection, "partidas", "uso_escape_seguro", "BOOLEAN NOT NULL DEFAULT FALSE");
+        addColumnIfMissing(connection, "partidas", "motivo_fin", "VARCHAR(160) NOT NULL DEFAULT 'Partida finalizada'");
+    }
+
+    private void addColumnIfMissing(Connection connection, String tableName, String columnName, String definition)
+            throws SQLException {
+        String sql = """
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, Database.getDatabaseName());
+            statement.setString(2, tableName);
+            statement.setString(3, columnName);
+            try (var resultSet = statement.executeQuery()) {
+                resultSet.next();
+                if (resultSet.getInt(1) > 0) {
+                    return;
+                }
+            }
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + definition);
+        }
     }
 }

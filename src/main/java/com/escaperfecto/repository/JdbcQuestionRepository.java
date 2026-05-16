@@ -40,4 +40,57 @@ public class JdbcQuestionRepository implements QuestionRepository {
             throw new IllegalStateException("No se pudieron cargar las preguntas.", exception);
         }
     }
+
+    @Override
+    public void add(Question question) {
+        String sql = """
+                INSERT INTO preguntas (categoria, texto, opcion_a, opcion_b, opcion_c, respuesta_correcta, segundos)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            fillStatement(statement, question);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("No se pudo agregar la pregunta.", exception);
+        }
+    }
+
+    @Override
+    public void update(Question question) {
+        String sql = """
+                UPDATE preguntas
+                SET categoria = ?, texto = ?, opcion_a = ?, opcion_b = ?, opcion_c = ?, respuesta_correcta = ?, segundos = ?
+                WHERE id = ?
+                """;
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            fillStatement(statement, question);
+            statement.setInt(8, question.getId());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("No se pudo actualizar la pregunta.", exception);
+        }
+    }
+
+    @Override
+    public void deleteById(int id) {
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM preguntas WHERE id = ?")) {
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new IllegalStateException("No se pudo borrar la pregunta.", exception);
+        }
+    }
+
+    private void fillStatement(PreparedStatement statement, Question question) throws SQLException {
+        statement.setString(1, question.getCategory());
+        statement.setString(2, question.getText());
+        statement.setString(3, question.getOptionA());
+        statement.setString(4, question.getOptionB());
+        statement.setString(5, question.getOptionC());
+        statement.setString(6, question.getCorrectAnswer().toUpperCase());
+        statement.setInt(7, question.getSeconds());
+    }
 }

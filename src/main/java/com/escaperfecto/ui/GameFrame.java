@@ -8,6 +8,7 @@ import com.escaperfecto.service.GameService;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.util.List;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
@@ -127,6 +128,7 @@ public class GameFrame extends javax.swing.JFrame {
         prizeActionsPanel = new javax.swing.JPanel();
         takePrizeButton = new javax.swing.JButton();
         trappedButton = new javax.swing.JButton();
+        adminButton = new javax.swing.JButton();
         wildcardPanel = new javax.swing.JPanel();
         wildcardTitleLabel = new javax.swing.JLabel();
         changeSectionButton = new javax.swing.JButton();
@@ -239,7 +241,7 @@ public class GameFrame extends javax.swing.JFrame {
         prizePanel.add(prizeScrollPane, java.awt.BorderLayout.CENTER);
 
         prizeActionsPanel.setBackground(DARK_BACKGROUND);
-        prizeActionsPanel.setLayout(new java.awt.GridLayout(2, 1, 8, 8));
+        prizeActionsPanel.setLayout(new java.awt.GridLayout(3, 1, 8, 8));
 
         takePrizeButton.setText("Tomar premio");
         takePrizeButton.addActionListener(evt -> takePrizeButtonActionPerformed(evt));
@@ -248,6 +250,10 @@ public class GameFrame extends javax.swing.JFrame {
         trappedButton.setText("Abrir puerta");
         trappedButton.addActionListener(evt -> trappedButtonActionPerformed(evt));
         prizeActionsPanel.add(trappedButton);
+
+        adminButton.setText("Administrador");
+        adminButton.addActionListener(evt -> adminButtonActionPerformed(evt));
+        prizeActionsPanel.add(adminButton);
 
         prizePanel.add(prizeActionsPanel, java.awt.BorderLayout.SOUTH);
 
@@ -288,6 +294,10 @@ public class GameFrame extends javax.swing.JFrame {
 
     private void escapeButtonActionPerformed(java.awt.event.ActionEvent evt) {
         useSafeEscape();
+    }
+
+    private void adminButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        openAdmin();
     }
 
     private void takePrizeButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -349,15 +359,17 @@ public class GameFrame extends javax.swing.JFrame {
 
         boolean correct = gameService.answerCurrentQuestion(selectedAnswer);
         if (!correct) {
-            finishGame(false, "Respuesta incorrecta. La partida termino.");
+            playSound();
+            finishGame(false, true, false, "Respuesta incorrecta. La partida termino.");
             return;
         }
 
+        playSound();
         JOptionPane.showMessageDialog(this, "Correcto, ganaron segundos.");
         showCurrentQuestion();
         refreshScore();
         if (!gameService.hasQuestionsRemaining()) {
-            finishGame(false, "Ya se contestaron las 10 preguntas. La partida termino.");
+            finishGame(false, false, false, "Ya se contestaron las 10 preguntas. La partida termino.");
         }
     }
 
@@ -390,32 +402,28 @@ public class GameFrame extends javax.swing.JFrame {
         prizeListModel.removeElement(selectedPrize);
         if (selectedPrize.isSafeEscape()) {
             JOptionPane.showMessageDialog(this, "Tomaron el escape seguro. Conservan los premios y termina la partida.");
-            finishGame(true);
+            finishGame(true, false, true, "Escape seguro tomado desde la jaula.");
             return;
         }
+        playSound();
         refreshScore();
         closeDoorIfTimeIsOver();
     }
 
     private void finishGame(boolean escaped) {
-        finishGame(escaped, null);
+        finishGame(escaped, false, escaped, "Partida finalizada.");
     }
 
-    private void finishGame(boolean escaped, String customMessage) {
+    private void finishGame(boolean escaped, boolean failed, boolean safeEscapeUsed, String finishReason) {
         if (!canPlay()) {
             return;
         }
 
         gameFinished = true;
         stopCountdown();
-        GameResult result = gameService.finishGame(escaped);
-        String message = result.isEscaped()
-                ? "Escaparon con $" + result.getTotalPrize()
-                : "Quedaron atrapados. Premio final: $0";
-        if (customMessage != null) {
-            message = customMessage + "\nPremio final: $" + result.getTotalPrize();
-        }
-        JOptionPane.showMessageDialog(this, message);
+        GameResult result = gameService.finishGame(escaped, failed, safeEscapeUsed, finishReason);
+        playSound();
+        showFinalSummary(result);
         refreshHistory();
         refreshScore();
     }
@@ -430,7 +438,7 @@ public class GameFrame extends javax.swing.JFrame {
             return;
         }
 
-        finishGame(true, "Escape seguro activado. Se retiran con los premios acumulados.");
+        finishGame(true, false, true, "Escape seguro activado. Se retiran con los premios acumulados.");
     }
 
     private boolean canPlay() {
@@ -461,6 +469,7 @@ public class GameFrame extends javax.swing.JFrame {
         doorOpen = true;
         trappedButton.setEnabled(false);
         trappedButton.setText("Puerta abierta");
+        playSound();
         startCountdownIfNeeded();
     }
 
@@ -493,6 +502,7 @@ public class GameFrame extends javax.swing.JFrame {
             doorOpen = false;
             trappedButton.setText("Abrir puerta");
             trappedButton.setEnabled(true);
+            playSound();
             JOptionPane.showMessageDialog(this, "Se acabo el tiempo de la jaula. La puerta se cerro, pero la partida sigue.");
             refreshScore();
         }
@@ -655,15 +665,57 @@ public class GameFrame extends javax.swing.JFrame {
         StringBuilder builder = new StringBuilder("Ultimas partidas\n\n");
         for (GameResult result : results) {
             builder.append(result.getCagePlayer())
-                    .append(result.isEscaped() ? " escapo con $" : " quedo atrapado con $")
+                    .append(" | ")
+                    .append(result.getAnsweredQuestions())
+                    .append("/")
+                    .append(gameService.getQuestionLimit())
+                    .append(" preguntas | ")
+                    .append(result.getFinishReason())
+                    .append(" | $")
                     .append(result.getTotalPrize())
                     .append("\n");
         }
         historyArea.setText(builder.toString());
     }
 
+    private void showFinalSummary(GameResult result) {
+        StringBuilder prizes = new StringBuilder();
+        for (Prize prize : result.getTakenPrizes()) {
+            prizes.append("- ")
+                    .append(prize.getName())
+                    .append(" ($")
+                    .append(prize.getValue())
+                    .append(")\n");
+        }
+        if (prizes.isEmpty()) {
+            prizes.append("Sin premios tomados.\n");
+        }
+
+        String message = "Resultado: " + (result.isEscaped() ? "Conservaron premios" : "Premio final en $0")
+                + "\nJugador preguntas: " + result.getQuestionPlayer()
+                + "\nJugador jaula: " + result.getCagePlayer()
+                + "\nPreguntas contestadas: " + result.getAnsweredQuestions() + " de " + gameService.getQuestionLimit()
+                + "\nFallo: " + (result.isFailed() ? "Si" : "No")
+                + "\nEscape seguro: " + (result.isSafeEscapeUsed() ? "Si" : "No")
+                + "\nMotivo: " + result.getFinishReason()
+                + "\n\nPremios tomados:\n" + prizes
+                + "\nTotal final: $" + result.getTotalPrize();
+        JOptionPane.showMessageDialog(this, message, "Resumen final", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openAdmin() {
+        AdminDialog dialog = new AdminDialog(this, gameService);
+        dialog.setVisible(true);
+        loadCategories();
+    }
+
+    private void playSound() {
+        Toolkit.getDefaultToolkit().beep();
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionsPanel;
+    private javax.swing.JButton adminButton;
     private javax.swing.JButton answerButton;
     private javax.swing.ButtonGroup answerGroup;
     private javax.swing.JLabel cagePlayerLabel;
