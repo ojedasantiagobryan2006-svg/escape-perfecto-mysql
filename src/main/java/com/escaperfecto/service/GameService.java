@@ -17,6 +17,7 @@ import java.util.Set;
 
 public class GameService {
     private static final int QUESTION_LIMIT = 10;
+    private static final int SAFE_ESCAPE_MINIMUM_QUESTION = 7;
     private final QuestionRepository questionRepository;
     private final PrizeRepository prizeRepository;
     private final GameRepository gameRepository;
@@ -93,6 +94,9 @@ public class GameService {
         if (prize == null || seconds < prize.getSecondsToTake() || escaped || takenPrizeIds.contains(prize.getId())) {
             return false;
         }
+        if (prize.isSafeEscape() && !canUseSafeEscape()) {
+            return false;
+        }
 
         seconds -= prize.getSecondsToTake();
         takenPrizeIds.add(prize.getId());
@@ -141,6 +145,14 @@ public class GameService {
 
     public int getQuestionLimit() {
         return QUESTION_LIMIT;
+    }
+
+    public boolean canUseSafeEscape() {
+        return getAnsweredQuestions() >= SAFE_ESCAPE_MINIMUM_QUESTION - 1;
+    }
+
+    public int getSafeEscapeMinimumQuestion() {
+        return SAFE_ESCAPE_MINIMUM_QUESTION;
     }
 
     public boolean hasQuestionsRemaining() {

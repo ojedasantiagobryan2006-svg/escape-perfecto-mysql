@@ -70,15 +70,31 @@ class GameServiceTest {
         Prize safeEscape = prizeRepository().findAll().get(1);
 
         service.startGame("Ana", "Luis");
-        service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
-        service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
-        service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
+        answerCorrectQuestions(service, 6);
         service.takePrize(normalPrize);
         service.takePrize(safeEscape);
         GameResult result = service.finishGame(true);
 
         assertTrue(result.isEscaped());
         assertEquals(normalPrize.getValue(), result.getTotalPrize());
+    }
+
+    @Test
+    void safeEscapeIsAvailableOnlyFromQuestionSeven() {
+        MemoryGameRepository gameRepository = new MemoryGameRepository();
+        GameService service = new GameService(questionRepository(), prizeRepository(), gameRepository);
+        Prize safeEscape = prizeRepository().findAll().get(1);
+
+        service.startGame("Ana", "Luis");
+        answerCorrectQuestions(service, 5);
+
+        assertFalse(service.canUseSafeEscape());
+        assertFalse(service.takePrize(safeEscape));
+
+        service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
+
+        assertTrue(service.canUseSafeEscape());
+        assertTrue(service.takePrize(safeEscape));
     }
 
     @Test
@@ -98,7 +114,11 @@ class GameServiceTest {
                 new Question(1, "Historia", "Pregunta 1", "A", "B", "C", "A", 10),
                 new Question(2, "Historia", "Pregunta 2", "A", "B", "C", "B", 10),
                 new Question(3, "Ciencia", "Pregunta 3", "A", "B", "C", "C", 10),
-                new Question(4, "Ciencia", "Pregunta 4", "A", "B", "C", "A", 10)
+                new Question(4, "Ciencia", "Pregunta 4", "A", "B", "C", "A", 10),
+                new Question(5, "Historia", "Pregunta 5", "A", "B", "C", "B", 10),
+                new Question(6, "Historia", "Pregunta 6", "A", "B", "C", "C", 10),
+                new Question(7, "Ciencia", "Pregunta 7", "A", "B", "C", "A", 10),
+                new Question(8, "Ciencia", "Pregunta 8", "A", "B", "C", "B", 10)
         );
     }
 
@@ -107,6 +127,12 @@ class GameServiceTest {
                 new Prize(1, "Tablet", 3500, 10, false),
                 new Prize(2, "Escape seguro", 0, 6, true)
         );
+    }
+
+    private void answerCorrectQuestions(GameService service, int amount) {
+        for (int i = 0; i < amount; i++) {
+            service.answerCurrentQuestion(service.getCurrentQuestion().getCorrectAnswer());
+        }
     }
 
     private static class MemoryGameRepository implements GameRepository {

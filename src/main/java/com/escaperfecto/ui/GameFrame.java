@@ -212,7 +212,7 @@ public class GameFrame extends javax.swing.JFrame {
         answerButton.addActionListener(evt -> answerButtonActionPerformed(evt));
         actionsPanel.add(answerButton);
 
-        escapeButton.setText("Salir de la jaula");
+        escapeButton.setText("Escape seguro");
         escapeButton.addActionListener(evt -> escapeButtonActionPerformed(evt));
         actionsPanel.add(escapeButton);
 
@@ -287,7 +287,7 @@ public class GameFrame extends javax.swing.JFrame {
     }
 
     private void escapeButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        leaveCage();
+        useSafeEscape();
     }
 
     private void takePrizeButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -375,6 +375,11 @@ public class GameFrame extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Selecciona un premio.");
             return;
         }
+        if (selectedPrize.isSafeEscape() && !gameService.canUseSafeEscape()) {
+            JOptionPane.showMessageDialog(this, "Escape seguro solo esta disponible desde la pregunta "
+                    + gameService.getSafeEscapeMinimumQuestion() + ".");
+            return;
+        }
 
         boolean taken = gameService.takePrize(selectedPrize);
         if (!taken) {
@@ -415,20 +420,17 @@ public class GameFrame extends javax.swing.JFrame {
         refreshScore();
     }
 
-    private void leaveCage() {
+    private void useSafeEscape() {
         if (!canPlay()) {
             return;
         }
-        if (!doorOpen) {
-            JOptionPane.showMessageDialog(this, "La puerta no esta abierta. Usa Escape seguro para terminar conservando premios.");
+        if (!gameService.canUseSafeEscape()) {
+            JOptionPane.showMessageDialog(this, "Escape seguro solo esta disponible desde la pregunta "
+                    + gameService.getSafeEscapeMinimumQuestion() + ".");
             return;
         }
 
-        doorOpen = false;
-        stopCountdown();
-        trappedButton.setText("Abrir puerta");
-        trappedButton.setEnabled(true);
-        JOptionPane.showMessageDialog(this, "Salieron de la jaula. Pueden seguir respondiendo hasta completar 10 preguntas.");
+        finishGame(true, "Escape seguro activado. Se retiran con los premios acumulados.");
     }
 
     private boolean canPlay() {

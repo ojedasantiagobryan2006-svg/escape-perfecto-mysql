@@ -63,9 +63,9 @@ En esta instalacion tambien funciona con el Maven incluido en NetBeans:
 6. Puedes abrir la puerta despues de 1, 2, 3 o las preguntas que decidas.
 7. Presiona `Abrir puerta` para iniciar el contador y entrar a la jaula.
 8. Usa esos segundos para tomar premios antes de que llegue a cero.
-9. Presiona `Salir de la jaula` para detener el contador y seguir respondiendo.
+9. Desde la pregunta 7 puedes presionar `Escape seguro` para retirarte con los premios acumulados.
 10. Si el tiempo llega a cero estando dentro, la puerta se cierra y la partida continua.
-11. La partida tambien termina si tomas `Escape seguro` o cuando se contestan las 10 preguntas.
+11. La partida tambien termina si se contestan las 10 preguntas.
 
 ## Secciones de preguntas
 
