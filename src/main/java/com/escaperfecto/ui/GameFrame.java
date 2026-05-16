@@ -352,7 +352,7 @@ public class GameFrame extends javax.swing.JFrame {
         showCurrentQuestion();
         refreshScore();
         if (!gameService.hasQuestionsRemaining()) {
-            JOptionPane.showMessageDialog(this, "Ya respondieron las 10 preguntas. Ahora decidan si entran a la jaula o toman el escape seguro.");
+            finishGame(false, "Ya se contestaron las 10 preguntas. La partida termino.");
         }
     }
 
@@ -388,6 +388,10 @@ public class GameFrame extends javax.swing.JFrame {
     }
 
     private void finishGame(boolean escaped) {
+        finishGame(escaped, null);
+    }
+
+    private void finishGame(boolean escaped, String customMessage) {
         if (!canPlay()) {
             return;
         }
@@ -398,6 +402,9 @@ public class GameFrame extends javax.swing.JFrame {
         String message = result.isEscaped()
                 ? "Escaparon con $" + result.getTotalPrize()
                 : "Quedaron atrapados. Premio final: $0";
+        if (customMessage != null) {
+            message = customMessage + "\nPremio final: $" + result.getTotalPrize();
+        }
         JOptionPane.showMessageDialog(this, message);
         refreshHistory();
         refreshScore();
@@ -417,9 +424,6 @@ public class GameFrame extends javax.swing.JFrame {
         trappedButton.setText("Abrir puerta");
         trappedButton.setEnabled(true);
         JOptionPane.showMessageDialog(this, "Salieron de la jaula. Pueden seguir respondiendo hasta completar 10 preguntas.");
-        if (!gameService.hasQuestionsRemaining()) {
-            JOptionPane.showMessageDialog(this, "Ya no quedan preguntas. Para cerrar la partida con premios, toma Escape seguro.");
-        }
     }
 
     private boolean canPlay() {
@@ -479,16 +483,10 @@ public class GameFrame extends javax.swing.JFrame {
     private void closeDoorIfTimeIsOver() {
         if (gameStarted && !gameFinished && gameService.getSeconds() <= 0) {
             stopCountdown();
-            gameFinished = true;
-            GameResult result = gameService.finishGame(false);
-            String message = result.isEscaped()
-                    ? "Usaron escape seguro y conservaron $" + result.getTotalPrize()
-                    : "Se cerro la puerta automaticamente. Premio final: $0";
-            JOptionPane.showMessageDialog(
-                    this,
-                    message
-            );
-            refreshHistory();
+            doorOpen = false;
+            trappedButton.setText("Abrir puerta");
+            trappedButton.setEnabled(true);
+            JOptionPane.showMessageDialog(this, "Se acabo el tiempo de la jaula. La puerta se cerro, pero la partida sigue.");
             refreshScore();
         }
     }
@@ -604,7 +602,7 @@ public class GameFrame extends javax.swing.JFrame {
         optionB.setEnabled(true);
         optionC.setEnabled(true);
         if (question == null) {
-            questionArea.setText("Ya no hay mas preguntas. Usen el tiempo ganado para tomar premios o salir.");
+            questionArea.setText("Ya se contestaron las 10 preguntas. La partida termino.");
             optionA.setText("");
             optionB.setText("");
             optionC.setText("");
