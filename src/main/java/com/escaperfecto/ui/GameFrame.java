@@ -287,7 +287,7 @@ public class GameFrame extends javax.swing.JFrame {
     }
 
     private void escapeButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        finishGame(true);
+        leaveCage();
     }
 
     private void takePrizeButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -336,6 +336,10 @@ public class GameFrame extends javax.swing.JFrame {
         if (!canPlay()) {
             return;
         }
+        if (doorOpen) {
+            JOptionPane.showMessageDialog(this, "Primero sal de la jaula para seguir respondiendo preguntas.");
+            return;
+        }
 
         String selectedAnswer = getSelectedAnswer();
         if (selectedAnswer == null) {
@@ -347,6 +351,9 @@ public class GameFrame extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, correct ? "Correcto, ganaron segundos." : "Incorrecto, no ganan tiempo.");
         showCurrentQuestion();
         refreshScore();
+        if (!gameService.hasQuestionsRemaining()) {
+            JOptionPane.showMessageDialog(this, "Ya respondieron las 10 preguntas. Ahora decidan si entran a la jaula o toman el escape seguro.");
+        }
     }
 
     private void takeSelectedPrize() {
@@ -372,7 +379,9 @@ public class GameFrame extends javax.swing.JFrame {
 
         prizeListModel.removeElement(selectedPrize);
         if (selectedPrize.isSafeEscape()) {
-            JOptionPane.showMessageDialog(this, "Tomaron el escape seguro. Ya pueden conservar los premios.");
+            JOptionPane.showMessageDialog(this, "Tomaron el escape seguro. Conservan los premios y termina la partida.");
+            finishGame(true);
+            return;
         }
         refreshScore();
         closeDoorIfTimeIsOver();
@@ -392,6 +401,25 @@ public class GameFrame extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, message);
         refreshHistory();
         refreshScore();
+    }
+
+    private void leaveCage() {
+        if (!canPlay()) {
+            return;
+        }
+        if (!doorOpen) {
+            JOptionPane.showMessageDialog(this, "La puerta no esta abierta. Usa Escape seguro para terminar conservando premios.");
+            return;
+        }
+
+        doorOpen = false;
+        stopCountdown();
+        trappedButton.setText("Abrir puerta");
+        trappedButton.setEnabled(true);
+        JOptionPane.showMessageDialog(this, "Salieron de la jaula. Pueden seguir respondiendo hasta completar 10 preguntas.");
+        if (!gameService.hasQuestionsRemaining()) {
+            JOptionPane.showMessageDialog(this, "Ya no quedan preguntas. Para cerrar la partida con premios, toma Escape seguro.");
+        }
     }
 
     private boolean canPlay() {
@@ -478,6 +506,10 @@ public class GameFrame extends javax.swing.JFrame {
         if (!canPlay()) {
             return;
         }
+        if (doorOpen) {
+            JOptionPane.showMessageDialog(this, "No puedes usar comodines mientras la puerta esta abierta.");
+            return;
+        }
         if (changeSectionUsed) {
             JOptionPane.showMessageDialog(this, "Ya usaste el comodin de cambio de seccion.");
             return;
@@ -513,6 +545,10 @@ public class GameFrame extends javax.swing.JFrame {
         if (!canPlay()) {
             return;
         }
+        if (doorOpen) {
+            JOptionPane.showMessageDialog(this, "No puedes usar comodines mientras la puerta esta abierta.");
+            return;
+        }
         if (removeOptionUsed) {
             JOptionPane.showMessageDialog(this, "Ya usaste el comodin de eliminar opcion.");
             return;
@@ -546,6 +582,10 @@ public class GameFrame extends javax.swing.JFrame {
         if (!canPlay()) {
             return;
         }
+        if (doorOpen) {
+            JOptionPane.showMessageDialog(this, "No puedes usar comodines mientras la puerta esta abierta.");
+            return;
+        }
         if (changeQuestionUsed) {
             JOptionPane.showMessageDialog(this, "Ya usaste el comodin de cambio de pregunta.");
             return;
@@ -573,7 +613,8 @@ public class GameFrame extends javax.swing.JFrame {
 
         questionArea.setText("Seccion: " + question.getCategory()
                 + "\n\n" + question.getText()
-                + "\n\nTiempo que otorga: " + question.getSeconds() + " segundos");
+                + "\n\nPregunta " + (gameService.getAnsweredQuestions() + 1) + " de " + gameService.getQuestionLimit()
+                + "\nTiempo que otorga: " + question.getSeconds() + " segundos");
         optionA.setText("A) " + question.getOptionA());
         optionB.setText("B) " + question.getOptionB());
         optionC.setText("C) " + question.getOptionC());

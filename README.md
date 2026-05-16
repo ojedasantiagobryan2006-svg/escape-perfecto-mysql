@@ -44,11 +44,13 @@ Si tu MySQL tiene otra configuracion, puedes usar variables de entorno:
 1. Escribe los nombres del participante que responde y del participante que entra a la jaula.
 2. Elige una seccion de cultura general o deja `Todas`.
 3. Presiona `Nueva partida`.
-4. Responde preguntas para ganar segundos.
-5. Presiona `Abrir puerta` para iniciar el contador.
-6. Usa esos segundos para tomar premios antes de que llegue a cero.
-7. Puedes salir con `Escape seguro` o arriesgarte a seguir tomando premios.
-8. Si el tiempo llega a cero antes de escapar, la puerta se cierra sola y pierdes los premios de la partida.
+4. Responde hasta un maximo de 10 preguntas para ganar segundos.
+5. Puedes abrir la puerta despues de 1, 2, 3 o las preguntas que decidas.
+6. Presiona `Abrir puerta` para iniciar el contador y entrar a la jaula.
+7. Usa esos segundos para tomar premios antes de que llegue a cero.
+8. Presiona `Salir de la jaula` para detener el contador y seguir respondiendo.
+9. Si tomas `Escape seguro`, la partida termina y conservas los premios.
+10. Si el tiempo llega a cero estando dentro, la puerta se cierra sola y pierdes todo.
 
 ## Secciones de preguntas
 
