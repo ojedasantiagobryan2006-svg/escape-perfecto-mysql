@@ -26,6 +26,7 @@ public class GameFrame extends javax.swing.JFrame {
     private boolean changeSectionUsed;
     private boolean removeOptionUsed;
     private boolean changeQuestionUsed;
+    private boolean doorOpen;
     private Timer countdownTimer;
 
     public GameFrame(GameService gameService) {
@@ -244,7 +245,7 @@ public class GameFrame extends javax.swing.JFrame {
         takePrizeButton.addActionListener(evt -> takePrizeButtonActionPerformed(evt));
         prizeActionsPanel.add(takePrizeButton);
 
-        trappedButton.setText("Se cerro la puerta");
+        trappedButton.setText("Abrir puerta");
         trappedButton.addActionListener(evt -> trappedButtonActionPerformed(evt));
         prizeActionsPanel.add(trappedButton);
 
@@ -294,7 +295,7 @@ public class GameFrame extends javax.swing.JFrame {
     }
 
     private void trappedButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        finishGame(false);
+        openDoor();
     }
 
     private void changeSectionButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -321,7 +322,10 @@ public class GameFrame extends javax.swing.JFrame {
         gameService.startGame(questionPlayer, cagePlayer, category);
         gameStarted = true;
         gameFinished = false;
+        doorOpen = false;
         stopCountdown();
+        trappedButton.setText("Abrir puerta");
+        trappedButton.setEnabled(true);
         resetWildcards();
         loadPrizes();
         showCurrentQuestion();
@@ -343,11 +347,14 @@ public class GameFrame extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, correct ? "Correcto, ganaron segundos." : "Incorrecto, no ganan tiempo.");
         showCurrentQuestion();
         refreshScore();
-        startCountdownIfNeeded();
     }
 
     private void takeSelectedPrize() {
         if (!canPlay()) {
+            return;
+        }
+        if (!doorOpen) {
+            JOptionPane.showMessageDialog(this, "Primero abre la puerta para iniciar el contador.");
             return;
         }
 
@@ -397,6 +404,25 @@ public class GameFrame extends javax.swing.JFrame {
             return false;
         }
         return true;
+    }
+
+    private void openDoor() {
+        if (!canPlay()) {
+            return;
+        }
+        if (doorOpen) {
+            JOptionPane.showMessageDialog(this, "La puerta ya esta abierta y el contador esta corriendo.");
+            return;
+        }
+        if (gameService.getSeconds() <= 0) {
+            JOptionPane.showMessageDialog(this, "Necesitan ganar segundos antes de abrir la puerta.");
+            return;
+        }
+
+        doorOpen = true;
+        trappedButton.setEnabled(false);
+        trappedButton.setText("Puerta abierta");
+        startCountdownIfNeeded();
     }
 
     private void startCountdownIfNeeded() {
