@@ -9,6 +9,8 @@ import com.escaperfecto.repository.QuestionRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +29,7 @@ public class GameService {
     private boolean escaped;
     private String questionPlayer;
     private String cagePlayer;
+    private Set<Integer> takenPrizeIds = new HashSet<>();
 
     public GameService(QuestionRepository questionRepository, PrizeRepository prizeRepository, GameRepository gameRepository) {
         this.questionRepository = questionRepository;
@@ -43,11 +46,13 @@ public class GameService {
         this.cagePlayer = cagePlayer;
         this.allQuestions = questionRepository.findAll();
         this.questions = buildQuestionRound(category);
-        this.prizes = prizeRepository.findAll();
+        this.prizes = new ArrayList<>(prizeRepository.findAll());
+        Collections.shuffle(this.prizes);
         this.questionIndex = 0;
         this.seconds = 0;
         this.totalPrize = 0;
         this.escaped = false;
+        this.takenPrizeIds = new HashSet<>();
     }
 
     public Question getCurrentQuestion() {
@@ -85,11 +90,12 @@ public class GameService {
     }
 
     public boolean takePrize(Prize prize) {
-        if (prize == null || seconds < prize.getSecondsToTake() || escaped) {
+        if (prize == null || seconds < prize.getSecondsToTake() || escaped || takenPrizeIds.contains(prize.getId())) {
             return false;
         }
 
         seconds -= prize.getSecondsToTake();
+        takenPrizeIds.add(prize.getId());
         if (prize.isSafeEscape()) {
             escaped = true;
         } else {
@@ -153,12 +159,14 @@ public class GameService {
         List<Question> selected = new ArrayList<>();
         if (category == null || category.equals("Todas")) {
             selected.addAll(allQuestions);
+            Collections.shuffle(selected);
         } else {
             for (Question question : allQuestions) {
                 if (question.getCategory().equals(category)) {
                     selected.add(question);
                 }
             }
+            Collections.shuffle(selected);
             for (Question question : allQuestions) {
                 if (selected.size() >= QUESTION_LIMIT) {
                     break;

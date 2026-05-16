@@ -39,6 +39,20 @@ Si tu MySQL tiene otra configuracion, puedes usar variables de entorno:
 - `DB_HOST_URL`
 - `DB_NAME`
 
+## Como verificarlo
+
+Desde NetBeans puedes usar `Run Project` para abrir el juego. Si quieres verificar compilacion y pruebas desde terminal, usa Maven:
+
+```bash
+mvn test
+```
+
+En esta instalacion tambien funciona con el Maven incluido en NetBeans:
+
+```powershell
+& 'C:\Program Files\NetBeans-22\netbeans\java\maven\bin\mvn.cmd' test
+```
+
 ## Como jugar
 
 1. Escribe los nombres del participante que responde y del participante que entra a la jaula.
