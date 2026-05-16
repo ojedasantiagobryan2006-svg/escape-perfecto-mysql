@@ -14,7 +14,11 @@ public class JdbcQuestionRepository implements QuestionRepository {
     @Override
     public List<Question> findAll() {
         List<Question> questions = new ArrayList<>();
-        String sql = "SELECT id, texto, opcion_a, opcion_b, opcion_c, respuesta_correcta, segundos FROM preguntas";
+        String sql = """
+                SELECT id, categoria, texto, opcion_a, opcion_b, opcion_c, respuesta_correcta, segundos
+                FROM preguntas
+                ORDER BY categoria, id
+                """;
 
         try (Connection connection = Database.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -22,6 +26,7 @@ public class JdbcQuestionRepository implements QuestionRepository {
             while (resultSet.next()) {
                 questions.add(new Question(
                         resultSet.getInt("id"),
+                        resultSet.getString("categoria"),
                         resultSet.getString("texto"),
                         resultSet.getString("opcion_a"),
                         resultSet.getString("opcion_b"),
@@ -36,4 +41,3 @@ public class JdbcQuestionRepository implements QuestionRepository {
         }
     }
 }
-

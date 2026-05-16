@@ -9,13 +9,16 @@ import com.escaperfecto.repository.QuestionRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GameService {
     private final QuestionRepository questionRepository;
     private final PrizeRepository prizeRepository;
     private final GameRepository gameRepository;
     private List<Question> questions = new ArrayList<>();
+    private List<Question> allQuestions = new ArrayList<>();
     private List<Prize> prizes = new ArrayList<>();
     private int questionIndex;
     private int seconds;
@@ -31,9 +34,20 @@ public class GameService {
     }
 
     public void startGame(String questionPlayer, String cagePlayer) {
+        startGame(questionPlayer, cagePlayer, "Todas");
+    }
+
+    public void startGame(String questionPlayer, String cagePlayer, String category) {
         this.questionPlayer = questionPlayer;
         this.cagePlayer = cagePlayer;
-        this.questions = questionRepository.findAll();
+        this.allQuestions = questionRepository.findAll();
+        if (category == null || category.equals("Todas")) {
+            this.questions = new ArrayList<>(allQuestions);
+        } else {
+            this.questions = allQuestions.stream()
+                    .filter(question -> question.getCategory().equals(category))
+                    .toList();
+        }
         this.prizes = prizeRepository.findAll();
         this.questionIndex = 0;
         this.seconds = 0;
@@ -88,6 +102,15 @@ public class GameService {
         return prizes;
     }
 
+    public List<String> getCategories() {
+        Set<String> categories = new LinkedHashSet<>();
+        categories.add("Todas");
+        for (Question question : questionRepository.findAll()) {
+            categories.add(question.getCategory());
+        }
+        return new ArrayList<>(categories);
+    }
+
     public int getSeconds() {
         return seconds;
     }
@@ -100,4 +123,3 @@ public class GameService {
         return gameRepository.findLastResults();
     }
 }
-

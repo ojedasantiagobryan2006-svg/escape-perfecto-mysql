@@ -16,6 +16,9 @@ import javax.swing.JOptionPane;
 public class GameFrame extends javax.swing.JFrame {
     private final GameService gameService;
     private final DefaultListModel<Prize> prizeListModel = new DefaultListModel<>();
+    private static final Color DARK_BACKGROUND = new Color(45, 45, 45);
+    private static final Color YELLOW_TEXT = new Color(255, 221, 0);
+    private static final Color OPTION_BACKGROUND = new Color(238, 238, 238);
     private boolean gameStarted;
     private boolean gameFinished;
 
@@ -29,10 +32,45 @@ public class GameFrame extends javax.swing.JFrame {
 
     private void configureWindow() {
         setLocationRelativeTo(null);
-        getContentPane().setBackground(new Color(245, 247, 250));
+        getContentPane().setBackground(DARK_BACKGROUND);
+        mainPanel.setBackground(DARK_BACKGROUND);
+        centerPanel.setBackground(DARK_BACKGROUND);
+        headerPanel.setBackground(DARK_BACKGROUND);
+        prizePanel.setBackground(DARK_BACKGROUND);
+        optionsPanel.setBackground(DARK_BACKGROUND);
+        actionsPanel.setBackground(DARK_BACKGROUND);
+        prizeActionsPanel.setBackground(DARK_BACKGROUND);
+        paintLabel(questionPlayerLabel);
+        paintLabel(cagePlayerLabel);
+        paintLabel(databaseLabel);
+        paintLabel(prizeTitleLabel);
+        paintLabel(categoryLabel);
         timerLabel.setFont(timerLabel.getFont().deriveFont(Font.BOLD, 18f));
         totalLabel.setFont(totalLabel.getFont().deriveFont(Font.BOLD, 18f));
+        paintLabel(timerLabel);
+        paintLabel(totalLabel);
+        styleOption(optionA);
+        styleOption(optionB);
+        styleOption(optionC);
+        loadCategories();
         questionArea.setText("Presiona Nueva partida para comenzar.");
+    }
+
+    private void paintLabel(javax.swing.JLabel label) {
+        label.setForeground(YELLOW_TEXT);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+    }
+
+    private void styleOption(javax.swing.JRadioButton option) {
+        option.setBackground(OPTION_BACKGROUND);
+        option.setFont(option.getFont().deriveFont(Font.BOLD));
+    }
+
+    private void loadCategories() {
+        categoryComboBox.removeAllItems();
+        for (String category : gameService.getCategories()) {
+            categoryComboBox.addItem(category);
+        }
     }
 
     /**
@@ -50,6 +88,8 @@ public class GameFrame extends javax.swing.JFrame {
         questionPlayerField = new javax.swing.JTextField();
         cagePlayerLabel = new javax.swing.JLabel();
         cagePlayerField = new javax.swing.JTextField();
+        categoryLabel = new javax.swing.JLabel();
+        categoryComboBox = new javax.swing.JComboBox<>();
         startButton = new javax.swing.JButton();
         timerLabel = new javax.swing.JLabel();
         totalLabel = new javax.swing.JLabel();
@@ -79,12 +119,12 @@ public class GameFrame extends javax.swing.JFrame {
         setMinimumSize(new Dimension(820, 540));
         setPreferredSize(new Dimension(940, 620));
 
-        mainPanel.setBackground(new Color(245, 247, 250));
+        mainPanel.setBackground(DARK_BACKGROUND);
         mainPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(14, 14, 14, 14));
         mainPanel.setLayout(new java.awt.BorderLayout(12, 12));
 
-        headerPanel.setOpaque(false);
-        headerPanel.setLayout(new java.awt.GridLayout(2, 4, 10, 8));
+        headerPanel.setBackground(DARK_BACKGROUND);
+        headerPanel.setLayout(new java.awt.GridLayout(3, 4, 10, 8));
 
         questionPlayerLabel.setText("Responde:");
         headerPanel.add(questionPlayerLabel);
@@ -97,6 +137,11 @@ public class GameFrame extends javax.swing.JFrame {
 
         cagePlayerField.setText("Jugador jaula");
         headerPanel.add(cagePlayerField);
+
+        categoryLabel.setText("Seccion:");
+        headerPanel.add(categoryLabel);
+
+        headerPanel.add(categoryComboBox);
 
         startButton.setText("Nueva partida");
         startButton.addActionListener(evt -> startButtonActionPerformed(evt));
@@ -113,7 +158,7 @@ public class GameFrame extends javax.swing.JFrame {
 
         mainPanel.add(headerPanel, java.awt.BorderLayout.NORTH);
 
-        centerPanel.setOpaque(false);
+        centerPanel.setBackground(DARK_BACKGROUND);
         centerPanel.setLayout(new java.awt.BorderLayout(10, 10));
 
         questionArea.setEditable(false);
@@ -127,7 +172,7 @@ public class GameFrame extends javax.swing.JFrame {
 
         centerPanel.add(questionScrollPane, java.awt.BorderLayout.NORTH);
 
-        optionsPanel.setOpaque(false);
+        optionsPanel.setBackground(DARK_BACKGROUND);
         optionsPanel.setLayout(new java.awt.GridLayout(3, 1, 6, 6));
 
         answerGroup.add(optionA);
@@ -141,7 +186,7 @@ public class GameFrame extends javax.swing.JFrame {
 
         centerPanel.add(optionsPanel, java.awt.BorderLayout.CENTER);
 
-        actionsPanel.setOpaque(false);
+        actionsPanel.setBackground(DARK_BACKGROUND);
         actionsPanel.setLayout(new java.awt.GridLayout(1, 2, 8, 8));
 
         answerButton.setText("Responder");
@@ -163,7 +208,7 @@ public class GameFrame extends javax.swing.JFrame {
 
         mainPanel.add(centerPanel, java.awt.BorderLayout.CENTER);
 
-        prizePanel.setOpaque(false);
+        prizePanel.setBackground(DARK_BACKGROUND);
         prizePanel.setPreferredSize(new Dimension(300, 0));
         prizePanel.setLayout(new java.awt.BorderLayout(8, 8));
 
@@ -174,7 +219,7 @@ public class GameFrame extends javax.swing.JFrame {
         prizeScrollPane.setViewportView(prizeList);
         prizePanel.add(prizeScrollPane, java.awt.BorderLayout.CENTER);
 
-        prizeActionsPanel.setOpaque(false);
+        prizeActionsPanel.setBackground(DARK_BACKGROUND);
         prizeActionsPanel.setLayout(new java.awt.GridLayout(2, 1, 8, 8));
 
         takePrizeButton.setText("Tomar premio");
@@ -222,7 +267,8 @@ public class GameFrame extends javax.swing.JFrame {
             return;
         }
 
-        gameService.startGame(questionPlayer, cagePlayer);
+        String category = String.valueOf(categoryComboBox.getSelectedItem());
+        gameService.startGame(questionPlayer, cagePlayer, category);
         gameStarted = true;
         gameFinished = false;
         loadPrizes();
@@ -309,7 +355,9 @@ public class GameFrame extends javax.swing.JFrame {
             return;
         }
 
-        questionArea.setText(question.getText() + "\n\nTiempo que otorga: " + question.getSeconds() + " segundos");
+        questionArea.setText("Seccion: " + question.getCategory()
+                + "\n\n" + question.getText()
+                + "\n\nTiempo que otorga: " + question.getSeconds() + " segundos");
         optionA.setText("A) " + question.getOptionA());
         optionB.setText("B) " + question.getOptionB());
         optionC.setText("C) " + question.getOptionC());
@@ -358,6 +406,8 @@ public class GameFrame extends javax.swing.JFrame {
     private javax.swing.ButtonGroup answerGroup;
     private javax.swing.JLabel cagePlayerLabel;
     private javax.swing.JTextField cagePlayerField;
+    private javax.swing.JComboBox<String> categoryComboBox;
+    private javax.swing.JLabel categoryLabel;
     private javax.swing.JPanel centerPanel;
     private javax.swing.JLabel databaseLabel;
     private javax.swing.JButton escapeButton;

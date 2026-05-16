@@ -2,6 +2,7 @@ package com.escaperfecto.model;
 
 public class Question {
     private final int id;
+    private final String category;
     private final String text;
     private final String optionA;
     private final String optionB;
@@ -9,8 +10,9 @@ public class Question {
     private final String correctAnswer;
     private final int seconds;
 
-    public Question(int id, String text, String optionA, String optionB, String optionC, String correctAnswer, int seconds) {
+    public Question(int id, String category, String text, String optionA, String optionB, String optionC, String correctAnswer, int seconds) {
         this.id = id;
+        this.category = category;
         this.text = text;
         this.optionA = optionA;
         this.optionB = optionB;
@@ -21,6 +23,10 @@ public class Question {
 
     public int getId() {
         return id;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getText() {
@@ -51,4 +57,3 @@ public class Question {
         return correctAnswer.equalsIgnoreCase(answer);
     }
 }
-

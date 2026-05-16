@@ -29,11 +29,23 @@ La base de datos `escape_perfecto.db` se crea automaticamente en la carpeta del 
 ## Como jugar
 
 1. Escribe los nombres del participante que responde y del participante que entra a la jaula.
-2. Presiona `Nueva partida`.
-3. Responde preguntas para ganar segundos.
-4. Usa esos segundos para tomar premios.
-5. Puedes salir con `Escape seguro` o arriesgarte a seguir tomando premios.
-6. Si el tiempo llega a cero antes de escapar, pierdes los premios de la partida.
+2. Elige una seccion de cultura general o deja `Todas`.
+3. Presiona `Nueva partida`.
+4. Responde preguntas para ganar segundos.
+5. Usa esos segundos para tomar premios.
+6. Puedes salir con `Escape seguro` o arriesgarte a seguir tomando premios.
+7. Si el tiempo llega a cero antes de escapar, pierdes los premios de la partida.
+
+## Secciones de preguntas
+
+- Historia
+- Geografia
+- Ciencia y Naturaleza
+- Arte y Literatura
+- Entretenimiento y Cultura Pop
+- Deportes
+
+El juego incluye 30 preguntas de cultura general y 14 premios disponibles en la jaula.
 
 ## Estructura
 
