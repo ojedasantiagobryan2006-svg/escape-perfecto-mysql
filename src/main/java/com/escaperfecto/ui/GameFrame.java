@@ -348,7 +348,12 @@ public class GameFrame extends javax.swing.JFrame {
         }
 
         boolean correct = gameService.answerCurrentQuestion(selectedAnswer);
-        JOptionPane.showMessageDialog(this, correct ? "Correcto, ganaron segundos." : "Incorrecto, no ganan tiempo.");
+        if (!correct) {
+            finishGame(false, "Respuesta incorrecta. La partida termino.");
+            return;
+        }
+
+        JOptionPane.showMessageDialog(this, "Correcto, ganaron segundos.");
         showCurrentQuestion();
         refreshScore();
         if (!gameService.hasQuestionsRemaining()) {
