@@ -13,6 +13,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 public class GameFrame extends javax.swing.JFrame {
     private final GameService gameService;
@@ -25,12 +26,14 @@ public class GameFrame extends javax.swing.JFrame {
     private boolean changeSectionUsed;
     private boolean removeOptionUsed;
     private boolean changeQuestionUsed;
+    private Timer countdownTimer;
 
     public GameFrame(GameService gameService) {
         this.gameService = gameService;
         initComponents();
         prizeList.setModel(prizeListModel);
         configureWindow();
+        configureTimer();
         refreshHistory();
     }
 
@@ -60,6 +63,10 @@ public class GameFrame extends javax.swing.JFrame {
         styleOption(optionC);
         loadCategories();
         questionArea.setText("Presiona Nueva partida para comenzar.");
+    }
+
+    private void configureTimer() {
+        countdownTimer = new Timer(1000, event -> tickTimer());
     }
 
     private void paintLabel(javax.swing.JLabel label) {
@@ -164,7 +171,7 @@ public class GameFrame extends javax.swing.JFrame {
         totalLabel.setText("Premios: $0");
         headerPanel.add(totalLabel);
 
-        databaseLabel.setText("Base de datos: SQLite");
+        databaseLabel.setText("Base de datos: MySQL");
         headerPanel.add(databaseLabel);
 
         mainPanel.add(headerPanel, java.awt.BorderLayout.NORTH);
@@ -314,6 +321,7 @@ public class GameFrame extends javax.swing.JFrame {
         gameService.startGame(questionPlayer, cagePlayer, category);
         gameStarted = true;
         gameFinished = false;
+        stopCountdown();
         resetWildcards();
         loadPrizes();
         showCurrentQuestion();
@@ -335,6 +343,7 @@ public class GameFrame extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, correct ? "Correcto, ganaron segundos." : "Incorrecto, no ganan tiempo.");
         showCurrentQuestion();
         refreshScore();
+        startCountdownIfNeeded();
     }
 
     private void takeSelectedPrize() {
@@ -359,6 +368,7 @@ public class GameFrame extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Tomaron el escape seguro. Ya pueden conservar los premios.");
         }
         refreshScore();
+        closeDoorIfTimeIsOver();
     }
 
     private void finishGame(boolean escaped) {
@@ -367,6 +377,7 @@ public class GameFrame extends javax.swing.JFrame {
         }
 
         gameFinished = true;
+        stopCountdown();
         GameResult result = gameService.finishGame(escaped);
         String message = result.isEscaped()
                 ? "Escaparon con $" + result.getTotalPrize()
@@ -386,6 +397,46 @@ public class GameFrame extends javax.swing.JFrame {
             return false;
         }
         return true;
+    }
+
+    private void startCountdownIfNeeded() {
+        if (gameStarted && !gameFinished && gameService.getSeconds() > 0 && !countdownTimer.isRunning()) {
+            countdownTimer.start();
+        }
+    }
+
+    private void stopCountdown() {
+        if (countdownTimer != null && countdownTimer.isRunning()) {
+            countdownTimer.stop();
+        }
+    }
+
+    private void tickTimer() {
+        if (!gameStarted || gameFinished) {
+            stopCountdown();
+            return;
+        }
+
+        gameService.tickSecond();
+        refreshScore();
+        closeDoorIfTimeIsOver();
+    }
+
+    private void closeDoorIfTimeIsOver() {
+        if (gameStarted && !gameFinished && gameService.getSeconds() <= 0) {
+            stopCountdown();
+            gameFinished = true;
+            GameResult result = gameService.finishGame(false);
+            String message = result.isEscaped()
+                    ? "Usaron escape seguro y conservaron $" + result.getTotalPrize()
+                    : "Se cerro la puerta automaticamente. Premio final: $0";
+            JOptionPane.showMessageDialog(
+                    this,
+                    message
+            );
+            refreshHistory();
+            refreshScore();
+        }
     }
 
     private void resetWildcards() {

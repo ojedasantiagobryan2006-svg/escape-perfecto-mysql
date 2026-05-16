@@ -109,6 +109,12 @@ public class GameService {
         return true;
     }
 
+    public void tickSecond() {
+        if (seconds > 0) {
+            seconds--;
+        }
+    }
+
     public GameResult finishGame(boolean escapedByDoor) {
         boolean finalEscape = escaped || escapedByDoor;
         int finalPrize = finalEscape ? totalPrize : 0;

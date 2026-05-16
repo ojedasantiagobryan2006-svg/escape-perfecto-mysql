@@ -127,7 +127,7 @@
             </Component>
             <Component class="javax.swing.JLabel" name="databaseLabel">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Base de datos: SQLite"/>
+            <Property name="text" type="java.lang.String" value="Base de datos: MySQL"/>
               </Properties>
             </Component>
           </SubComponents>

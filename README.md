@@ -45,9 +45,10 @@ Si tu MySQL tiene otra configuracion, puedes usar variables de entorno:
 2. Elige una seccion de cultura general o deja `Todas`.
 3. Presiona `Nueva partida`.
 4. Responde preguntas para ganar segundos.
-5. Usa esos segundos para tomar premios.
-6. Puedes salir con `Escape seguro` o arriesgarte a seguir tomando premios.
-7. Si el tiempo llega a cero antes de escapar, pierdes los premios de la partida.
+5. El temporizador empezara a descontar automaticamente cuando ganes segundos.
+6. Usa esos segundos para tomar premios.
+7. Puedes salir con `Escape seguro` o arriesgarte a seguir tomando premios.
+8. Si el tiempo llega a cero antes de escapar, la puerta se cierra sola y pierdes los premios de la partida.
 
 ## Secciones de preguntas
 
